@@ -29,6 +29,12 @@
 			<version>${apache.plc4x.version}</version>
 		</dependency>
 
+        <dependency>
+            <groupId>org.apache.plc4x</groupId>
+            <artifactId>plc4j-driver-canopen</artifactId>
+            <version>${apache.plc4x.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
