@@ -1,4 +1,4 @@
-package com.github.stuckya.dooraccessbusrelay;
+package com.github.stuckya.busrelay;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
