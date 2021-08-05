@@ -1,0 +1,16 @@
+# Use the Google style in this project.
+BasedOnStyle: Google
+
+# Format raw string literals with a `pb` or `proto` tag as proto.
+RawStringFormats:
+- Language: TextProto
+  Delimiters:
+  - 'pb'
+  - 'proto'
+  BasedOnStyle: Google
+
+UseTab: ForIndentation
+ColumnLimit: 0
+TabWidth: 4
+IndentCaseLabels: false
+IndentWidth: 4
