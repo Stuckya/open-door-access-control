@@ -4,16 +4,17 @@
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 
-#include <DoorAccessCanMessageService.cpp>
+#include <CanMessageService.cpp>
 
 WIEGANDMULTI wg;
 
 // TODO: define CS pin in header/config.
 MCP_CAN *CAN0 = new MCP_CAN(10);
+RelayControlService *relayService = new RelayControlService();
 
-DoorAccessCanMessageService canBusService(CAN0);
+CanMessageService canBusService(CAN0, relayService);
 
-// TODO: DoorAccessWiegandService?
+// TODO: CardReaderService?
 void Reader1D0Interrupt(void) {
 	wg.ReadD0();
 }
@@ -26,6 +27,7 @@ void setup() {
 	Serial.begin(9600);
 
 	canBusService.configureBus();
+	relayService->configureRelay();
 
 	// TODO: Move pins to header/ config.
 	wg.begin(8, 9, Reader1D0Interrupt, Reader1D1Interrupt);
@@ -33,9 +35,7 @@ void setup() {
 
 void loop() {
 	canBusService.heartbeatProducer();
-
-	// TODO: Relay service?
-	canBusService.checkToTurnRelayOff();
+	relayService->checkToTurnRelayOff();
 
 	if (canBusService.canMessageAvailable()) {
 		canBusService.processCanMessage();

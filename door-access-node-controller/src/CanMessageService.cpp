@@ -3,25 +3,27 @@
 #include <mcp_can_dfs.h>
 #include <millisDelay.h>
 
+#include <RelayControlService.cpp>
+
 // TODO: Config/ Header File?
-#define RELAY_PIN 5
 #define CAN0_INTERRUPT_PIN 2
 #define ARDUINO_ID 100
 
-class DoorAccessCanMessageService {
+class CanMessageService {
    private:
 	MCP_CAN *canBus = nullptr;
+	RelayControlService *relayService = nullptr;
 
 	unsigned char len = 0;
 	unsigned char rxBuf[8];
 	long unsigned int rxId;
+
 	millisDelay heartbeatDelay;
-	millisDelay relayDelay;
 
    public:
-	DoorAccessCanMessageService(MCP_CAN *bus) : canBus(bus) {
-		if (canBus == nullptr) {
-			Serial.println("Injected service must not be null.");
+	CanMessageService(MCP_CAN *bus, RelayControlService *relayService) : canBus(bus), relayService(relayService) {
+		if (canBus == nullptr || relayService == nullptr) {
+			Serial.println("Injected services must not be null!");
 		}
 	}
 
@@ -33,7 +35,6 @@ class DoorAccessCanMessageService {
 		}
 
 		busSetup();
-		pinMode(RELAY_PIN, OUTPUT);
 	}
 
    private:
@@ -65,7 +66,8 @@ class DoorAccessCanMessageService {
 		if (heartbeatDelay.justFinished()) {
 			heartbeatDelay.repeat();
 
-			// TODO: Send heartbeat message here.
+			Serial.println("Heartbeat.");
+			// TODO: Send heartbeat message here. Do we need to wait for MCP2515 setup?
 		}
 	}
 
@@ -89,21 +91,12 @@ class DoorAccessCanMessageService {
 		if (rxBuf[1] == 1) {
 			Serial.println("Received unlock command.");
 
-			digitalWrite(RELAY_PIN, HIGH);
-
 			// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
 			// TODO: Trigger hold: scan card, door detected open, scan again?
 			unsigned char lockDelaySeconds = rxBuf[2];
 			unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
 
-			relayDelay.start(lockDelayMilliseconds);
-		}
-	}
-
-   public:
-	void checkToTurnRelayOff() {
-		if (relayDelay.justFinished()) {
-			digitalWrite(RELAY_PIN, LOW);
+			relayService->triggerRelay(lockDelayMilliseconds);
 		}
 	}
 
