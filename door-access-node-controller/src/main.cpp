@@ -1,5 +1,7 @@
 #include <Arduino.h>
+#include <ArduinoLog.h>
 #include <SPI.h>
+#include <Settings.h>
 #include <WiegandMulti.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
@@ -7,14 +9,11 @@
 #include <CanMessageService.cpp>
 
 WIEGANDMULTI wg;
-
-// TODO: define CS pin in header/config.
-MCP_CAN *CAN0 = new MCP_CAN(10);
-RelayControlService *relayService = new RelayControlService();
-
+MCP_CAN *CAN0 = new MCP_CAN(CAN0_CS_PIN);
+RelayControlService relayService;
 CanMessageService canBusService(CAN0, relayService);
 
-// TODO: CardReaderService?
+// TODO: CardReaderService? Interrupt not compatible with C++ classes. Workaround?
 void Reader1D0Interrupt(void) {
 	wg.ReadD0();
 }
@@ -25,17 +24,17 @@ void Reader1D1Interrupt(void) {
 
 void setup() {
 	Serial.begin(9600);
+	Log.begin(LOG_LEVEL_VERBOSE, &Serial);
 
-	canBusService.configureBus();
-	relayService->configureRelay();
+	canBusService.setup();
+	relayService.setup();
 
-	// TODO: Move pins to header/ config.
-	wg.begin(8, 9, Reader1D0Interrupt, Reader1D1Interrupt);
+	wg.begin(WIEGAND_PIN_D0, WIEGAND_PIN_D1, Reader1D0Interrupt, Reader1D1Interrupt);
 }
 
 void loop() {
 	canBusService.heartbeatProducer();
-	relayService->checkToTurnRelayOff();
+	relayService.checkToTurnRelayOff();
 
 	if (canBusService.canMessageAvailable()) {
 		canBusService.processCanMessage();

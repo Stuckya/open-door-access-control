@@ -1,14 +1,12 @@
 #include <Arduino.h>
+#include <Settings.h>
 #include <millisDelay.h>
-
-#define RELAY_PIN 5
-
 class RelayControlService {
    private:
 	millisDelay relayDelay;
 
    public:
-	void configureRelay() {
+	void setup() {
 		pinMode(RELAY_PIN, OUTPUT);
 	}
 

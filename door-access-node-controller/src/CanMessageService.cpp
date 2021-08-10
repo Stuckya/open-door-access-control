@@ -1,18 +1,16 @@
+#include <ArduinoLog.h>
 #include <SPI.h>
+#include <Settings.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 #include <millisDelay.h>
 
 #include <RelayControlService.cpp>
 
-// TODO: Config/ Header File?
-#define CAN0_INTERRUPT_PIN 2
-#define ARDUINO_ID 100
-
 class CanMessageService {
    private:
 	MCP_CAN *canBus = nullptr;
-	RelayControlService *relayService = nullptr;
+	RelayControlService relayService;
 
 	unsigned char len = 0;
 	unsigned char rxBuf[8];
@@ -21,24 +19,24 @@ class CanMessageService {
 	millisDelay heartbeatDelay;
 
    public:
-	CanMessageService(MCP_CAN *bus, RelayControlService *relayService) : canBus(bus), relayService(relayService) {
-		if (canBus == nullptr || relayService == nullptr) {
-			Serial.println("Injected services must not be null!");
+	CanMessageService(MCP_CAN *bus, RelayControlService relayService) : canBus(bus), relayService(relayService) {
+		if (canBus == nullptr) {
+			Log.error("Injected services must not be null!");
 		}
 	}
 
    public:
-	void configureBus() {
+	void setup() {
 		if (canBus->begin(MCP_STDEXT, CAN_250KBPS, MCP_16MHZ) != CAN_OK) {
-			Serial.println("MCP2515 setup failure!");
+			Log.error("MCP2515 setup failure!");
 			return;
 		}
 
-		busSetup();
+		configureBus();
 	}
 
    private:
-	void busSetup() {
+	void configureBus() {
 		pinMode(CAN0_INTERRUPT_PIN, INPUT);
 
 		configureMaskAndFilters();
@@ -47,7 +45,7 @@ class CanMessageService {
 
 		heartbeatDelay.start(1000);
 
-		Serial.println("MCP2515 setup success!");
+		Log.notice("MCP2515 setup success!");
 	}
 
    private:
@@ -66,7 +64,7 @@ class CanMessageService {
 		if (heartbeatDelay.justFinished()) {
 			heartbeatDelay.repeat();
 
-			Serial.println("Heartbeat.");
+			Log.notice("Heartbeat.");
 			// TODO: Send heartbeat message here. Do we need to wait for MCP2515 setup?
 		}
 	}
@@ -89,14 +87,14 @@ class CanMessageService {
 
 		// TODO: Switch over available commands? Unlock, LED, hold, program new key?
 		if (rxBuf[1] == 1) {
-			Serial.println("Received unlock command.");
+			Log.notice("Received unlock command.");
 
 			// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
 			// TODO: Trigger hold: scan card, door detected open, scan again?
 			unsigned char lockDelaySeconds = rxBuf[2];
 			unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
 
-			relayService->triggerRelay(lockDelayMilliseconds);
+			relayService.triggerRelay(lockDelayMilliseconds);
 		}
 	}
 
@@ -107,9 +105,9 @@ class CanMessageService {
 		byte sndStat = canBus->sendMsgBuf(ARDUINO_ID, 0, 8, byteArraycardCode);
 
 		if (sndStat == CAN_OK) {
-			Serial.println("Success sending card code over CAN network.");
+			Log.notice("Success sending card code over CAN network.");
 		} else {
-			Serial.println("Failure sending card code over CAN network.");
+			Log.error("Failure sending card code over CAN network.");
 		}
 	}
 
