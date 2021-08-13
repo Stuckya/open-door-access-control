@@ -1,46 +1,46 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <CanMessageService.h>
+#include <CardReaderService.h>
 #include <SPI.h>
 #include <Settings.h>
 #include <WiegandMulti.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 
-#include <CanMessageService.cpp>
-
-WIEGANDMULTI wg;
+WIEGANDMULTI *wg = new WIEGANDMULTI;
 MCP_CAN *CAN0 = new MCP_CAN(CAN0_CS_PIN);
-RelayControlService relayService;
-CanMessageService canBusService(CAN0, relayService);
 
-// TODO: CardReaderService? Interrupt not compatible with C++ classes. Workaround?
+RelayControlService *relayService = new RelayControlService;
+CanMessageService *busService = new CanMessageService(CAN0, relayService);
+CardReaderService *cardReaderService = new CardReaderService(wg);
+
 void Reader1D0Interrupt(void) {
-	wg.ReadD0();
+	wg->ReadD0();
 }
 
 void Reader1D1Interrupt(void) {
-	wg.ReadD1();
+	wg->ReadD1();
 }
 
 void setup() {
 	Serial.begin(9600);
 	Log.begin(LOG_LEVEL_VERBOSE, &Serial);
 
-	canBusService.setup();
-	relayService.setup();
-
-	wg.begin(WIEGAND_PIN_D0, WIEGAND_PIN_D1, Reader1D0Interrupt, Reader1D1Interrupt);
+	busService->setup();
+	cardReaderService->setup(Reader1D0Interrupt, Reader1D1Interrupt);
+	relayService->setup();
 }
 
 void loop() {
-	canBusService.heartbeatProducer();
-	relayService.checkToTurnRelayOff();
+	busService->heartbeatProducer();
+	relayService->checkToTurnRelayOff();
 
-	if (canBusService.canMessageAvailable()) {
-		canBusService.processCanMessage();
+	if (busService->canMessageAvailable()) {
+		busService->processCanMessage();
 	}
 
-	if (wg.available()) {
-		canBusService.sendCardCodeToCanBus(wg.getCode());
+	if (cardReaderService->cardAvailable()) {
+		busService->sendCardCodeToCanBus(cardReaderService->getCode());
 	}
 }
