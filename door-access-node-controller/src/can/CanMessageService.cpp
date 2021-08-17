@@ -29,7 +29,7 @@ void CanMessageService::configureBus() {
 }
 
 void CanMessageService::configureMaskAndFilters() {
-	// Create mask and filter to allow only receipt of 0x7xx CAN IDs
+	// INFO: Create mask and filter to allow only receipt of 0x7xx CAN IDs
 	canBus->init_Mask(0, 0, 0x07000000);
 	canBus->init_Mask(1, 0, 0x07000000);
 
