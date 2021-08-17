@@ -1,5 +1,6 @@
 #include <ArduinoLog.h>
 #include <CanMessageService.h>
+#include <CanMessageType.h>
 #include <SPI.h>
 #include <Settings.h>
 #include <mcp_can.h>
@@ -37,51 +38,66 @@ void CanMessageService::configureMaskAndFilters() {
 	}
 }
 
-void CanMessageService::heartbeatProducer() {
-	if (heartbeatDelay.justFinished()) {
-		heartbeatDelay.repeat();
-
-		Log.notice("Heartbeat.");
-		// TODO: Send heartbeat message here. Do we need to wait for MCP2515 setup?
-	}
-}
-
 boolean CanMessageService::canMessageAvailable() {
 	return CAN_MSGAVAIL == canBus->checkReceive();
 }
 
-void CanMessageService::processCanMessage() {
-	// TODO: parameterType?
-	// INFO: Message structure { arduinoId, commandId, parameter }
+void CanMessageService::processIncomingCanMessage() {
+	// INFO: Message structure { arduinoId, commandId, data }
 	canBus->readMsgBuf(&rxId, &len, rxBuf);
 
-	// This message isn't for me!
 	if (rxBuf[0] != ARDUINO_ID) {
 		return;
 	}
 
-	// TODO: Switch over available commands? Unlock, LED, hold, program new key?
-	if (rxBuf[1] == 1) {
-		Log.notice("Received unlock command.");
+	switch (rxBuf[1]) {
+		// INFO: { lockDelaySeconds }
+		case (int)(CanMessageType::doorUnlock): {
+			Log.notice("Received unlock command.");
 
-		// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
-		// TODO: Trigger hold: scan card, door detected open, scan again?
-		unsigned char lockDelaySeconds = rxBuf[2];
-		unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
+			// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
+			// TODO: Trigger hold: scan card, door detected open, scan again?
+			unsigned char lockDelaySeconds = rxBuf[2];
+			unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
 
-		relayService->triggerRelay(lockDelayMilliseconds);
+			relayService->triggerRelay(lockDelayMilliseconds);
+			break;
+		}
+	}
+}
+
+void CanMessageService::heartbeatProducer() {
+	if (heartbeatDelay.justFinished()) {
+		heartbeatDelay.repeat();
+
+		unsigned char messageBuffer[2] = {(int)(CanMessageType::heartBeat), 1};
+
+		sendMessageToBus(2, messageBuffer);
+
+		Log.trace("Sending heartbeat.");
 	}
 }
 
 void CanMessageService::sendCardCodeToCanBus(unsigned long cardCode) {
-	unsigned char *byteArraycardCode = convertLongToByteArray(cardCode);
+	unsigned char messageType[1] = {(int)(CanMessageType::cardRead)};
 
-	byte sndStat = canBus->sendMsgBuf(ARDUINO_ID, 0, 8, byteArraycardCode);
+	unsigned char *byteArrayCardCode = convertLongToByteArray(cardCode);
+
+	unsigned char messageBuffer[5];
+
+	memcpy(messageBuffer, messageType, 1);
+	memcpy(messageBuffer + 1, byteArrayCardCode, 4);
+
+	sendMessageToBus(5, messageBuffer);
+}
+
+void CanMessageService::sendMessageToBus(INT8U len, INT8U *buf) {
+	byte sndStat = canBus->sendMsgBuf(ARDUINO_ID, 0, len, buf);
 
 	if (sndStat == CAN_OK) {
-		Log.notice("Success sending card code over CAN network.");
+		Log.trace("Success sending message CAN network.");
 	} else {
-		Log.error("Failure sending card code over CAN network.");
+		Log.error("Failure sending message CAN network.");
 	}
 }
 

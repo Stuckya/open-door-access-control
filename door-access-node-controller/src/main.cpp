@@ -37,7 +37,7 @@ void loop() {
 	relayService->checkToTurnRelayOff();
 
 	if (busService->canMessageAvailable()) {
-		busService->processCanMessage();
+		busService->processIncomingCanMessage();
 	}
 
 	if (cardReaderService->cardAvailable()) {

@@ -34,16 +34,19 @@ class CanMessageService {
 	void configureMaskAndFilters();
 
    public:
-	void heartbeatProducer();
-
-   public:
 	boolean canMessageAvailable();
 
    public:
-	void processCanMessage();
+	void processIncomingCanMessage();
+
+   public:
+	void heartbeatProducer();
 
    public:
 	void sendCardCodeToCanBus(unsigned long cardCode);
+
+   private:
+	void sendMessageToBus(INT8U len, INT8U *buf);
 
    private:
 	unsigned char *convertLongToByteArray(unsigned long num);

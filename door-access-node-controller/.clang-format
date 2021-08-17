@@ -12,5 +12,5 @@ RawStringFormats:
 UseTab: ForIndentation
 ColumnLimit: 0
 TabWidth: 4
-IndentCaseLabels: false
+IndentCaseLabels: true
 IndentWidth: 4
