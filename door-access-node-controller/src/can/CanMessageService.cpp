@@ -1,8 +1,8 @@
 #include <ArduinoLog.h>
-#include <CanMessageService.h>
-#include <CanMessageType.h>
 #include <SPI.h>
 #include <Settings.h>
+#include <can/CanMessageService.h>
+#include <can/CanMessageType.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 #include <millisDelay.h>

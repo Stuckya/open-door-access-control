@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
-#include <CanMessageService.h>
-#include <CardReaderService.h>
 #include <SPI.h>
 #include <Settings.h>
 #include <WiegandMulti.h>
+#include <can/CanMessageService.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
+#include <wiegand/CardReaderService.h>
 
 WIEGANDMULTI *wg = new WIEGANDMULTI;
 MCP_CAN *CAN0 = new MCP_CAN(CAN0_CS_PIN);

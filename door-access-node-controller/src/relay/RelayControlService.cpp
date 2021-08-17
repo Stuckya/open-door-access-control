@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include <RelayControlService.h>
 #include <Settings.h>
 #include <millisDelay.h>
+#include <relay/RelayControlService.h>
 
 void RelayControlService::setup() {
 	pinMode(RELAY_PIN, OUTPUT);

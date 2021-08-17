@@ -1,10 +1,10 @@
 #include <ArduinoLog.h>
-#include <RelayControlService.h>
 #include <SPI.h>
 #include <Settings.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 #include <millisDelay.h>
+#include <relay/RelayControlService.h>
 
 class CanMessageService {
    private:
