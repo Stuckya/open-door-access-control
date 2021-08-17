@@ -53,10 +53,10 @@ void CanMessageService::processIncomingCanMessage() {
 	switch (rxBuf[1]) {
 		// INFO: { lockDelaySeconds }
 		case (int)(CanMessageType::doorUnlock): {
-			Log.notice("Received unlock command.");
+			Log.trace("Received unlock command.");
 
 			// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
-			// TODO: Trigger hold: scan card, door detected open, scan again?
+			// TODO: Trigger hold: door detected open, scan card to hold?
 			unsigned char lockDelaySeconds = rxBuf[2];
 			unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
 

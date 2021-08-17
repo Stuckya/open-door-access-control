@@ -25,7 +25,7 @@ void Reader1D1Interrupt(void) {
 
 void setup() {
 	Serial.begin(9600);
-	Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+	Log.begin(LOG_LEVEL_INFO, &Serial);
 
 	busService->setup();
 	cardReaderService->setup(Reader1D0Interrupt, Reader1D1Interrupt);
