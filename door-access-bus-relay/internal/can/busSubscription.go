@@ -18,7 +18,7 @@ type NodeStatus struct {
 var connectedNodes = map[uint32]NodeStatus{}
 
 func SubscribeToBus() {
-	log.Println("Starting bus.")
+	log.Println("Starting the bus...")
 
 	bus := &SocketCan{}
 
@@ -26,26 +26,37 @@ func SubscribeToBus() {
 		log.Fatal(err)
 	}
 
+	go readMessages(bus)
+
+	err := bus.ListenAndServe()
+
+	if err != nil {
+		err := bus.Close()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Fatal(err)
+	}
+}
+
+func readMessages(bus *SocketCan) {
 	for {
 		timer := time.NewTimer(10 * time.Second)
 
 		select {
 		case frm := <-bus.readChan:
 			processCanFrame(frm, bus)
-		case err, ok := <-bus.errChan:
-			if !ok {
-				bus.Close()
-				log.Fatal(err)
-			}
 		case <-timer.C:
-			log.Println("Timed out while reading bus.")
+			log.Println("Timed out while reading message from bus.")
 		}
 	}
 }
 
 func processCanFrame(frm *can.Frame, bus *SocketCan) {
 
-	log.Println("processing frame...")
+	log.Println("Processing frame...")
 
 	switch frm.Data[0] {
 	case messageType.HEARTBEAT:

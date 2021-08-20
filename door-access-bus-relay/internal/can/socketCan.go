@@ -8,7 +8,6 @@ type SocketCan struct {
 	bus *can.Bus
 	busHandler can.Handler
 	readChan chan *can.Frame
-	errChan chan error
 }
 
 func (b *SocketCan) Open() error {
@@ -18,10 +17,7 @@ func (b *SocketCan) Open() error {
 	}
 
 	b.bus = bus
-	b.errChan = make(chan error)
 	b.readChan = make(chan *can.Frame)
-
-	go b.connectAndPublish()
 
 	b.busHandler = can.NewHandler(b.handleFrame)
 	b.bus.Subscribe(b.busHandler)
@@ -45,17 +41,8 @@ func (b *SocketCan) Close() error {
 	return b.bus.Disconnect()
 }
 
-func (b *SocketCan) connectAndPublish() {
-
-	defer close(b.errChan)
-
-	err := b.bus.ConnectAndPublish()
-
-	if err == nil {
-		return
-	}
-
-	b.errChan <- err
+func (b *SocketCan) ListenAndServe() error {
+	return b.bus.ConnectAndPublish()
 }
 
 func (b *SocketCan) handleFrame(frm can.Frame) {
