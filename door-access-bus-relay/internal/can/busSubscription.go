@@ -10,12 +10,12 @@ import (
 )
 
 type NodeStatus struct {
-	nodeStatus		uint8 // enum?
-	syncStatus		uint8 // enum?
+	nodeStatus		byte // enum?
+	syncStatus		byte // enum?
 	// timestamp?
 }
 
-var connectedNodes = map[uint32]NodeStatus{}
+var connectedNodes = map[uint8]NodeStatus{}
 
 func SubscribeToBus() {
 	log.Println("Starting the bus...")
@@ -67,7 +67,9 @@ func processCanFrame(frm *can.Frame, bus *SocketCan) {
 }
 
 func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
-	nodeId := frm.ID
+	const MaskNodeID uint32 = 0x7F
+
+	nodeId := uint8(frm.ID & MaskNodeID)
 	msgStatus := frm.Data[1]
 
 	storedNode, ok := connectedNodes[nodeId]
@@ -81,14 +83,7 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 		// TODO: Do we run the check on all statuses? Only pre-operational?
 		if doCheck(nodeId) {
 			// You are good, we should start you.
-			bus.Publish(can.Frame{
-				ID: 100,
-				Length: 3,
-				Flags:  0,
-				Res0:   0,
-				Res1:   0,
-				Data:   [8]uint8{100, messageType.UPDATE_STATUS, status.OPERATIONAL},
-			})
+			bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.OPERATIONAL})
 
 			connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
@@ -96,14 +91,7 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 		}
 
 		// You are bad, we should stop you.
-		bus.Publish(can.Frame{
-			ID: 100,
-			Length: 3,
-			Flags:  0,
-			Res0:   0,
-			Res1:   0,
-			Data:   [8]uint8{100, messageType.UPDATE_STATUS, status.STOPPED},
-		})
+		bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.STOPPED})
 
 		connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
@@ -124,6 +112,6 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 	// doCheck() and on response update map & bus?
 }
 
-func doCheck(id uint32) bool {
+func doCheck(id uint8) bool {
 	return id == 100
 }
