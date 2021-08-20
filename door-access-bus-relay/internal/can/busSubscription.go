@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"github.com/brutella/can"
 	"github.com/stuckya/door-access-bus-relay/internal/can/messageType"
-	"github.com/stuckya/door-access-bus-relay/internal/can/nodeStatus"
-	"github.com/stuckya/door-access-bus-relay/internal/can/syncStatus"
+	"github.com/stuckya/door-access-bus-relay/internal/can/status"
 	"log"
 	"time"
 )
@@ -27,17 +26,17 @@ func SubscribeToBus() {
 		log.Fatal(err)
 	}
 
-	timer := time.NewTimer(10 * time.Second)
-
 	for {
+		timer := time.NewTimer(10 * time.Second)
+
 		select {
-		case frm, ok := <-bus.readChan:
-
-			if !ok {
-
-			}
-
+		case frm := <-bus.readChan:
 			processCanFrame(frm, bus)
+		case err, ok := <-bus.errChan:
+			if !ok {
+				bus.Close()
+				log.Fatal(err)
+			}
 		case <-timer.C:
 			log.Println("Timed out while reading bus.")
 		}
@@ -58,7 +57,7 @@ func processCanFrame(frm *can.Frame, bus *SocketCan) {
 
 func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 	nodeId := frm.ID
-	status := frm.Data[1]
+	msgStatus := frm.Data[1]
 
 	storedNode, ok := connectedNodes[nodeId]
 
@@ -66,7 +65,7 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 		fmt.Println("New node added to map from heartbeat message.")
 
 		// Add to the map, don't want to process a second message twice.
-		connectedNodes[nodeId] = NodeStatus{status,syncStatus.READY}
+		connectedNodes[nodeId] = NodeStatus{msgStatus, status.READY}
 
 		// TODO: Do we run the check on all statuses? Only pre-operational?
 		if doCheck(nodeId) {
@@ -77,10 +76,10 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 				Flags:  0,
 				Res0:   0,
 				Res1:   0,
-				Data:   [8]uint8{100, messageType.UPDATE_STATUS, nodeStatus.OPERATIONAL},
+				Data:   [8]uint8{100, messageType.UPDATE_STATUS, status.OPERATIONAL},
 			})
 
-			connectedNodes[nodeId] = NodeStatus{status,syncStatus.DONE}
+			connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
 			return
 		}
@@ -92,25 +91,25 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 			Flags:  0,
 			Res0:   0,
 			Res1:   0,
-			Data:   [8]uint8{100, messageType.UPDATE_STATUS, nodeStatus.STOPPED},
+			Data:   [8]uint8{100, messageType.UPDATE_STATUS, status.STOPPED},
 		})
 
-		connectedNodes[nodeId] = NodeStatus{status,syncStatus.DONE}
+		connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
 		return
 	}
 
-	if storedNode.nodeStatus == status {
+	if storedNode.nodeStatus == msgStatus {
 		return
 	}
 
-	fmt.Println("Node updated status in map.")
+	fmt.Println("Node updated msgStatus in map.")
 	// TODO: Do we actually need to change something here?
 	// Operational -> Stopped = doNothing
 	// Operational -> PreOperational = doNothing? / can this happen?
 	// Stopped -> Operational = doNothing
 	// Stopped -> PreOperational = doSomething
-	connectedNodes[nodeId] = NodeStatus{status,storedNode.syncStatus}
+	connectedNodes[nodeId] = NodeStatus{msgStatus,storedNode.syncStatus}
 	// doCheck() and on response update map & bus?
 }
 

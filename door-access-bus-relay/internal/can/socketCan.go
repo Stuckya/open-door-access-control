@@ -2,7 +2,6 @@ package can
 
 import (
 	"github.com/brutella/can"
-	"log"
 )
 
 type SocketCan struct {
@@ -24,19 +23,8 @@ func (b *SocketCan) Open() error {
 
 	go b.connectAndPublish()
 
-	for err := range b.errChan {
-		log.Fatal(err)
-	}
-
 	b.busHandler = can.NewHandler(b.handleFrame)
 	b.bus.Subscribe(b.busHandler)
-
-	//chanErr, ok := <- b.errChan
-	//
-	//if ok {
-	//	log.Print(chanErr)
-	//	return chanErr
-	//}
 
 	return nil
 }

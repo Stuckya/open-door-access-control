@@ -1,4 +1,4 @@
-package syncStatus
+package status
 
 const (
 	READY  = iota

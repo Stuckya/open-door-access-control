@@ -1,4 +1,4 @@
-package nodeStatus
+package status
 
 const (
 	PRE_OPERATIONAL  = iota
