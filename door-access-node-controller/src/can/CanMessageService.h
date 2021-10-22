@@ -1,6 +1,7 @@
 #include <ArduinoLog.h>
 #include <SPI.h>
 #include <Settings.h>
+#include <can/HealthCheckStatus.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 #include <millisDelay.h>
@@ -14,6 +15,7 @@ class CanMessageService {
 	unsigned char len = 0;
 	unsigned char rxBuf[8];
 	long unsigned int rxId;
+	HealthCheckStatus status = HealthCheckStatus::PRE_OPERATIONAL;
 
 	millisDelay heartbeatDelay;
 

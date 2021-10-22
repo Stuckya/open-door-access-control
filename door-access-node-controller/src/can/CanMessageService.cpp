@@ -51,12 +51,23 @@ void CanMessageService::processIncomingCanMessage() {
 	}
 
 	switch (rxBuf[1]) {
+		// INFO: { updatedStatus }
+		case (int)(CanMessageType::UPDATE_STATUS): {
+			Log.trace("Received status update command.");
+
+			// TODO: nullptr/ empty check?
+			unsigned char updatedStatus = rxBuf[2];
+
+			status = static_cast<HealthCheckStatus>(updatedStatus);
+			break;
+		}
 		// INFO: { lockDelaySeconds }
-		case (int)(CanMessageType::doorUnlock): {
+		case (int)(CanMessageType::DOOR_UNLOCK): {
 			Log.trace("Received unlock command.");
 
 			// TODO: Should this accept 0 for unlimited w/ timeout? A way to hold unlock.
 			// TODO: Trigger hold: door detected open, scan card to hold?
+			// TODO: nullptr/ empty check?
 			unsigned char lockDelaySeconds = rxBuf[2];
 			unsigned long lockDelayMilliseconds = lockDelaySeconds * 1000;
 
@@ -70,16 +81,16 @@ void CanMessageService::heartbeatProducer() {
 	if (heartbeatDelay.justFinished()) {
 		heartbeatDelay.repeat();
 
-		unsigned char messageBuffer[2] = {(int)(CanMessageType::heartBeat), 1};
+		unsigned char messageBuffer[2] = {(int)(CanMessageType::HEARTBEAT), (unsigned char)(status)};
 
-		sendMessageToBus(2, messageBuffer);
+		canBus->sendMsgBuf(ARDUINO_ID, 0, 2, messageBuffer);
 
 		Log.trace("Sending heartbeat.");
 	}
 }
 
 void CanMessageService::sendCardCodeToCanBus(unsigned long cardCode) {
-	unsigned char messageType[1] = {(int)(CanMessageType::cardRead)};
+	unsigned char messageType[1] = {(int)(CanMessageType::CARD_READ)};
 
 	unsigned char *byteArrayCardCode = convertLongToByteArray(cardCode);
 
@@ -92,6 +103,12 @@ void CanMessageService::sendCardCodeToCanBus(unsigned long cardCode) {
 }
 
 void CanMessageService::sendMessageToBus(INT8U len, INT8U *buf) {
+	if (status == HealthCheckStatus::STOPPED) {
+		Log.error("Cannot send message in Stopped state.");
+
+		return;
+	}
+
 	byte sndStat = canBus->sendMsgBuf(ARDUINO_ID, 0, len, buf);
 
 	if (sndStat == CAN_OK) {
