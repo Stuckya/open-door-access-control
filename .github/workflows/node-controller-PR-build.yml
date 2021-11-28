@@ -8,8 +8,11 @@ on:
     paths:
       - "door-access-node-controller/**"
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./door-access-node-controller
     steps:
     - uses: actions/checkout@v2
     - name: Cache pip
