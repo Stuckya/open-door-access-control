@@ -28,7 +28,7 @@ func Produce(frame can.Frame, bus *can.Bus, timeout time.Duration) chan <- struc
 	return stop
 }
 
-// ProduceHeartbeat repeatedly sends a heartbeat frame. test
+// ProduceHeartbeat repeatedly sends a heartbeat frame.
 func ProduceHeartbeat(nodeID uint8, state [8]uint8, bus *can.Bus, timeout time.Duration) chan <- struct{} {
 	frame := frame.NewHeartbeatFrame(nodeID, state)
 	return Produce(frame, bus, timeout)
