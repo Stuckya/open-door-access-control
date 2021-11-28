@@ -1,3 +1,4 @@
-enum class CanMessageType { heartBeat,
-	                        cardRead,
-	                        doorUnlock };
+enum class CanMessageType { HEARTBEAT,
+	                        UPDATE_STATUS,
+	                        CARD_READ,
+	                        DOOR_UNLOCK };
