@@ -13,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Entity
 @Inheritance(strategy= InheritanceType.JOINED)
-public abstract class BaseCredential <T extends BaseCredential<T>> extends BaseEntity<T> {
+public abstract class Credential<T extends Credential<T>> extends BaseEntity<T> {
 
     private String name;
     private Instant lastUsed;

@@ -1,0 +1,10 @@
+dgs:
+  graphql:
+    graphiql:
+      enabled: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRESQL_HOST:localhost}:${POSTGRESQL_PORT:5432}/door
+    username: ggadmin
+    password: ggpass

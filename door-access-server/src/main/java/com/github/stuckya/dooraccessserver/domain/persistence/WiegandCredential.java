@@ -12,7 +12,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 @NoArgsConstructor
 @Entity
 @PrimaryKeyJoinColumn(name="id")
-public class RfidCredential extends Credential<RfidCredential> {
+public class WiegandCredential extends Credential<WiegandCredential> {
 
     private int code;
 }

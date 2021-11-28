@@ -1,2 +1,4 @@
-package com.github.stuckya.dooraccessserver.domain.persistence;public class Relay {
+package com.github.stuckya.dooraccessserver.domain.persistence;
+
+public class Relay {
 }
