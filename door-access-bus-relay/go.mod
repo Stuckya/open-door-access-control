@@ -1,6 +1,6 @@
 module github.com/stuckya/door-access-bus-relay
 
-go 1.16
+go 1.17
 
 require (
 	github.com/brutella/can v0.0.2
