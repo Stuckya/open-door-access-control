@@ -83,7 +83,10 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 		// TODO: Do we run the check on all statuses? Only pre-operational?
 		if doCheck(nodeId) {
 			// You are good, we should start you.
-			bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.OPERATIONAL})
+			err := bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.OPERATIONAL})
+			if err != nil {
+				return 
+			}
 
 			connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
@@ -91,7 +94,10 @@ func evaluateHeartbeat(frm *can.Frame, bus *SocketCan) {
 		}
 
 		// You are bad, we should stop you.
-		bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.STOPPED})
+		err := bus.SendDataAsMaster([]byte{nodeId, messageType.UPDATE_STATUS, status.STOPPED})
+		if err != nil {
+			return 
+		}
 
 		connectedNodes[nodeId] = NodeStatus{msgStatus, status.DONE}
 
