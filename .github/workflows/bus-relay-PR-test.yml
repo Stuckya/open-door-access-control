@@ -1,4 +1,4 @@
-name: Test
+name: Test Bus Relay
   
 on: 
   pull_request:
