@@ -1,9 +1,6 @@
 name: Test
   
 on: 
-  push:
-    paths:
-      - "door-access-bus-relay/**"
   pull_request:
     paths:
       - "door-access-bus-relay/**"
